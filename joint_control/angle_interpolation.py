@@ -22,6 +22,7 @@
 
 from pid import PIDAgent
 from keyframes import hello
+from spark_agent import INVERSED_JOINTS
 
 
 class AngleInterpolationAgent(PIDAgent):
@@ -37,7 +38,7 @@ class AngleInterpolationAgent(PIDAgent):
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
         self.target_joints.update(target_joints)
-        return super(PIDAgent, self).think(perception)
+        return super(AngleInterpolationAgent, self).think(perception)
 
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
@@ -50,9 +51,9 @@ class AngleInterpolationAgent(PIDAgent):
             #print self.startTime
         adjTime = perception.time - self.startTime
         #print "adj time"
-        #print adjTime
+        print adjTime
         
-        (names, times, keys) = hello()
+        (names, times, keys) = keyframes
         
         # iterate over all joints in the keyframes
         for (i, name) in enumerate(names):
@@ -81,26 +82,30 @@ class AngleInterpolationAgent(PIDAgent):
             t = (adjTime - timeLow) / (timeHigh - timeLow)
             
             # set p-values
-            # if kfNum == 0, we are before the first time in curTimes -> no p-values for p0 and p1
+            # if kfNum == 0, we are before the first time in curTimes -> no values for p0 and p1
             if (kfNum == 0):
-                p3 = keys[i][j][0]
-                p2 = keys[i][j][1][2]
+                p3 = keys[i][kfNum][0]
+                p2 = p3 + keys[i][kfNum][1][2]
                 p0 = 0
                 p1 = 0
             else:
-                p0 = keys[i][j-1][0]
-                p3 = keys[i][j][0]
-                p1 = p0 + keys[i][j-1][2][2]
-                p2 = p3 + keys[i][j][1][2]
+                p0 = keys[i][kfNum-1][0]
+                p3 = keys[i][kfNum][0]
+                p1 = p0 + keys[i][kfNum-1][2][2]
+                p2 = p3 + keys[i][kfNum][1][2]
+                
                 
             # calculate joint angle and append to dictionary
-            angle = pow(1-t, 3)*p0 + 3*t*pow(1-t, 2)*p1 + 3*pow(t, 2)*(t-1)*p2 + pow(t, 3)*p3
-            target_joints[name] = 0.9
+            angle = ((1.0-t)**3)*p0 + 1.0*t*((1.0-t)**1.0)*p1 + 1.0*(t**1.0)*(1.0-t)*p2 + (t**1.0)*p3
+            if(name in INVERSED_JOINTS):
+                target_joints[name] = -1*angle
+            else:
+                target_joints[name] = angle
             #print degrees(angle)
             
 
-        print "return"
-        print target_joints
+        #print "return"
+        #print target_joints
 
         return target_joints
 

@@ -11,7 +11,10 @@
 
 
 from angle_interpolation import AngleInterpolationAgent
-from keyframes import hello
+from keyframes import rightBellyToStand
+import pickle
+import numpy as np
+from os import listdir
 
 
 class PostureRecognitionAgent(AngleInterpolationAgent):
@@ -22,7 +25,10 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
                  sync_mode=True):
         super(PostureRecognitionAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.posture = 'unknown'
-        self.posture_classifier = None  # LOAD YOUR CLASSIFIER
+        ROBOT_POSE_CLF = 'robot_pose.pkl'
+        self.posture_classifier = pickle.load(open(ROBOT_POSE_CLF))  # LOAD YOUR CLASSIFIER
+        ROBOT_POSE_DATA_DIR = 'robot_pose_data'
+        self.classes = listdir(ROBOT_POSE_DATA_DIR)
 
     def think(self, perception):
         self.posture = self.recognize_posture(perception)
@@ -31,10 +37,27 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
     def recognize_posture(self, perception):
         posture = 'unknown'
         # YOUR CODE HERE
+        # get angles of: ['AngleX', 'AngleY', 'LHipYawPitch', 'LHipRoll', 'LHipPitch', 'LKneePitch', 'RHipYawPitch', 'RHipRoll', 'RHipPitch', 'RKneePitch']
+        angles = []
+        angles.append(perception.imu[0])
+        angles.append(perception.imu[1])
+        angles.append(perception.joint['LHipYawPitch'])
+        angles.append(perception.joint['LHipRoll'])
+        angles.append(perception.joint['LHipPitch'])
+        angles.append(perception.joint['LKneePitch'])
+        angles.append(perception.joint['RHipYawPitch'])
+        angles.append(perception.joint['RHipRoll'])
+        angles.append(perception.joint['RHipPitch'])
+        angles.append(perception.joint['RKneePitch'])
+        
+        angles = np.array(angles).reshape(1, -1)
+        
+        posture = self.posture_classifier.predict(angles)
+        print self.classes[posture[0]]
 
         return posture
 
 if __name__ == '__main__':
-    agent = AngleInterpolationAgent()
-    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
+    agent = PostureRecognitionAgent()
+    agent.keyframes = rightBellyToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()

@@ -21,7 +21,7 @@
 
 
 from pid import PIDAgent
-from keyframes import hello
+from keyframes import rightBackToStand
 from spark_agent import INVERSED_JOINTS
 
 
@@ -51,7 +51,7 @@ class AngleInterpolationAgent(PIDAgent):
             #print self.startTime
         adjTime = perception.time - self.startTime
         #print "adj time"
-        print adjTime
+        #print adjTime
         
         (names, times, keys) = keyframes
         
@@ -66,6 +66,10 @@ class AngleInterpolationAgent(PIDAgent):
             
             # interpolation is finished for this joint, dont do any more steps
             if (adjTime > curTimes[lenCurTimes - 1]):
+                #if(name in INVERSED_JOINTS):
+                #   target_joints[name] = -1*keys[i][lenCurTimes-1][0]
+                #else:
+                #    target_joints[name] = keys[i][lenCurTimes-1][0]
                 continue
             
             # iterate over all times of the current joint to find the right time span
@@ -96,7 +100,7 @@ class AngleInterpolationAgent(PIDAgent):
                 
                 
             # calculate joint angle and append to dictionary
-            angle = ((1.0-t)**3)*p0 + 1.0*t*((1.0-t)**1.0)*p1 + 1.0*(t**1.0)*(1.0-t)*p2 + (t**1.0)*p3
+            angle = ((1-t)**3)*p0 + 3*t*((1-t)**2)*p1 + 3*(t**2)*(1-t)*p2 + (t**3)*p3
             if(name in INVERSED_JOINTS):
                 target_joints[name] = -1*angle
             else:
@@ -111,5 +115,5 @@ class AngleInterpolationAgent(PIDAgent):
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = rightBackToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()

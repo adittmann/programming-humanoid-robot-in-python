@@ -21,8 +21,7 @@
 
 
 from pid import PIDAgent
-from keyframes import rightBackToStand
-from spark_agent import INVERSED_JOINTS
+from keyframes import hello
 
 
 class AngleInterpolationAgent(PIDAgent):
@@ -101,10 +100,10 @@ class AngleInterpolationAgent(PIDAgent):
                 
             # calculate joint angle and append to dictionary
             angle = ((1-t)**3)*p0 + 3*t*((1-t)**2)*p1 + 3*(t**2)*(1-t)*p2 + (t**3)*p3
-            if(name in INVERSED_JOINTS):
-                target_joints[name] = -1*angle
-            else:
-                target_joints[name] = angle
+            #if(name in INVERSED_JOINTS):
+            #    target_joints[name] = -1*angle
+            #else:
+            target_joints[name] = angle
             #print degrees(angle)
             
 
@@ -115,5 +114,5 @@ class AngleInterpolationAgent(PIDAgent):
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = rightBackToStand()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()

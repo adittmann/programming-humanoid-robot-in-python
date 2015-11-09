@@ -11,7 +11,7 @@
 
 
 from angle_interpolation import AngleInterpolationAgent
-from keyframes import rightBellyToStand
+from keyframes import hello
 import pickle
 import numpy as np
 from os import listdir

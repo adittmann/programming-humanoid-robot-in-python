@@ -21,6 +21,7 @@ import sys
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'joint_control'))
 
 from numpy.matlib import matrix, identity
+import numpy as np
 
 from angle_interpolation import AngleInterpolationAgent
 
@@ -55,8 +56,18 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         :return: transformation
         :rtype: 4x4 matrix
         '''
+        angle = perception.joint.get(joint_name)
+        s = sin(angle)
+        c = cos(angle)
+
         T = matrix()
         # YOUR CODE HERE
+        Rx = matrix('1 0 0 0; 0 c -s 0; 0 s c 0 ; 0 0 0 1')
+        Ry = matrix('c 0 s 0; 0 1 0 0; -s 0 c 0 ; 0 0 0 1')
+        Rz = matrix('c -s 0 0; s c 0 0; 0 0 1 0 ; 0 0 0 1')
+
+        T += np.dot(np.dot(Rx,Ry)Rz)
+
 
         return T
 

@@ -11,7 +11,7 @@
 
 
 from angle_interpolation import AngleInterpolationAgent
-from keyframes import hello
+from keyframes import leftBackToStand
 import pickle
 import numpy as np
 from os import listdir
@@ -52,12 +52,12 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
         
         angles = np.array(angles).reshape(1, -1)
         
-        posture = self.posture_classifier.predict(angles)[0]
-        #print self.classes[posture[0]]
+        posture = self.classes[self.posture_classifier.predict(angles)[0]]
+        print posture
 
         return posture
 
 if __name__ == '__main__':
     agent = PostureRecognitionAgent()
-    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = leftBackToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()

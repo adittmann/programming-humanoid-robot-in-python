@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 '''In this exercise you need to implement forward kinematics for NAO robot
 
 * Tasks:
@@ -23,8 +26,10 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '
 from numpy.matlib import matrix, identity
 import numpy as np
 
-from angle_interpolation import AngleInterpolationAgent
+from keyframes import *
 
+from angle_interpolation import AngleInterpolationAgent
+import angle_interpolation
 
 class ForwardKinematicsAgent(AngleInterpolationAgent):
     def __init__(self, simspark_ip='localhost',
@@ -45,15 +50,15 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
                        }
                        # , 'LWristYaw', 'LHand'
                        # , 'RWristYaw', 'RHand'
-        # Länge der Abstände der einzelnen Gelenke in den chains
+        # Laenge der Abstaende der einzelnen Gelenke in den chains
         self.jointLengths = {'HeadYaw' : (0, 0, 126.50), 'HeadPitch' : (0, 0, 0),
                              # left arm and leg
-                            'LShoulderPitch' : (0, 98.00, 0), 'LShoulderRoll' : (0, 0, 0), 'LElbowYaw' : (105, 15, 0),
+                            'LShoulderPitch' : (0, 98.00, 100), 'LShoulderRoll' : (0, 0, 0), 'LElbowYaw' : (105, 15, 0),
                             'LElbowRoll' : (0, 0, 0), 'LWristYaw' : (55.95, 0, 0), 'LHand' : (57.75, 0, 12.31),
                             'LHipYawPitch' : (0, 50.00, -85.00), 'LHipRoll' : (0, 0, 0), 'LHipPitch' : (0, 0, 0), 
                             'LKneePitch' : (0, 0, -100.00), 'LAnklePitch' : (0, 0, -102.90), 'LAnkleRoll' : (0, 0, 45.19),
                              # right arm and leg
-                            'RShoulderPitch' : (0, -98.00, 0), 'RShoulderRoll' : (0, 0, 0), 'RElbowYaw' : (105, -15, 0),
+                            'RShoulderPitch' : (0, -98.00, 100), 'RShoulderRoll' : (0, 0, 0), 'RElbowYaw' : (105, -15, 0),
                             'RElbowRoll' : (0, 0, 0), 'RWristYaw' : (55.95, 0, 0), 'RHand' : (57.75, 0, 12.31),
                             'RHipYawPitch' : (0, -50.00, -85.00), 'RHipRoll' : (0, 0, 0), 'RHipPitch' : (0, 0, 0), 
                              'RKneePitch' : (0, 0, -100.00), 'RAnklePitch' : (0, 0, -102.90), 'RAnkleRoll' : (0, 0, 45.19)}
@@ -71,26 +76,28 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         :rtype: 4x4 matrix
         '''
 
-        T = np.zeros((4,4))
+        T = np.identity(4)
         # YOUR CODE HERE
         s = np.sin(joint_angle)
         c = np.cos(joint_angle)
 
         # nach foliensatz 3 Kinematics folie 35
-        Rx = np.array([[1,0,0,0], [0,c,-s,0], [0,s,c,0], [0,0,0,1]])
-        Ry = np.array([[c,0,s,0], [0,1,0,0], [-s,0,c,0], [0,0,0,1]])
-        Rz = np.array([[c,-s,0,0], [s,c,0,0], [0,0,1,0], [0,0,0,1]])
+        if (joint_name in ["LElbowRoll", "RElbowRoll", "LShoulderRoll", "LHipRoll", "RShoulderRoll", "RHipRoll", "LAnkleRoll", "RAnkleRoll"]):
+            T = np.dot(T, np.array([[1,0,0,0], [0,c,-s,0], [0,s,c,0], [0,0,0,1]]))
+        if (joint_name in ["HeadPitch", "LshoulderPitch", "LHipYawPitch", "LKneePitch", "LAnklePitch", "LHipPitch", "RShoulderPitch", "RHipYawPitch", "RKneePitch", "RAnklePitch", "RHipPitch"]):
+            T = np.dot(T, np.array([[c,0,s,0], [0,1,0,0], [-s,0,c,0], [0,0,0,1]]))
+        if (joint_name in ["Headyaw", "LHipYawPitch", "LElbowYaw", "RHipYawPitch", "RElbowYaw"]):
+            T = np.dot(T, np.array([[c,-s,0,0], [s,c,0,0], [0,0,1,0], [0,0,0,1]]))
 
-        T = np.dot(np.dot(Rx,Ry),Rz)
         #print(joint_name)
         #print(T)
 
         # Verschiebung durch die Länge der einzelnen Gelenkabstände
-        T[3][0] = self.jointLengths[joint_name][0]
-        T[3][1] = self.jointLengths[joint_name][1]
-        T[3][2] = self.jointLengths[joint_name][2]
+        T[0][3] = self.jointLengths[joint_name][0]
+        T[1][3] = self.jointLengths[joint_name][1]
+        T[2][3] = self.jointLengths[joint_name][2]
 
-
+        
         return T
 
     def forward_kinematics(self, joints):
@@ -109,8 +116,18 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
                 # YOUR CODE HERE
                 T = np.dot(T,Tl)
                 self.transforms[joint] = T
+                
+        #print(self.transforms['HeadYaw'][3][2])
+        
+        for i in self.transforms:
+            if (i == 'RElbowYaw'):
+                print(i," x,y,z,1 : ", np.array(self.transforms.get(i))[2][3])
+                
+        
         #print(self.transforms)
+        #print("| x: ", self.transforms[3][0]," y: ",self.transforms[3][1], " z: ", self.transforms[3][2])
 
 if __name__ == '__main__':
     agent = ForwardKinematicsAgent()
+    agent.keyframes = hello()
     agent.run()

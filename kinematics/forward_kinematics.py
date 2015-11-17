@@ -124,7 +124,7 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
                 xc = np.array(self.transforms.get(i))[0][3]
                 yc = np.array(self.transforms.get(i))[1][3]
                 zc = np.array(self.transforms.get(i))[2][3]
-                print(i,'(', xc, ', ', yc, ', ', zc, ')')
+                print i, "(" , xc, ', ', yc, ', ', zc, ')'
                 
         
         #print(self.transforms)
@@ -132,5 +132,5 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
 
 if __name__ == '__main__':
     agent = ForwardKinematicsAgent()
-    agent.keyframes = hello()
+    agent.keyframes = leftBackToStand()
     agent.run()

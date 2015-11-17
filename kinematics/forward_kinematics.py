@@ -56,12 +56,12 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
                             'LShoulderPitch' : (0, 98.00, 100), 'LShoulderRoll' : (0, 0, 0), 'LElbowYaw' : (105, 15, 0),
                             'LElbowRoll' : (0, 0, 0), 'LWristYaw' : (55.95, 0, 0), 'LHand' : (57.75, 0, 12.31),
                             'LHipYawPitch' : (0, 50.00, -85.00), 'LHipRoll' : (0, 0, 0), 'LHipPitch' : (0, 0, 0), 
-                            'LKneePitch' : (0, 0, -100.00), 'LAnklePitch' : (0, 0, -102.90), 'LAnkleRoll' : (0, 0, 45.19),
+                            'LKneePitch' : (0, 0, -100.00), 'LAnklePitch' : (0, 0, -102.90), 'LAnkleRoll' : (0, 0, 0),
                              # right arm and leg
                             'RShoulderPitch' : (0, -98.00, 100), 'RShoulderRoll' : (0, 0, 0), 'RElbowYaw' : (105, -15, 0),
                             'RElbowRoll' : (0, 0, 0), 'RWristYaw' : (55.95, 0, 0), 'RHand' : (57.75, 0, 12.31),
                             'RHipYawPitch' : (0, -50.00, -85.00), 'RHipRoll' : (0, 0, 0), 'RHipPitch' : (0, 0, 0), 
-                             'RKneePitch' : (0, 0, -100.00), 'RAnklePitch' : (0, 0, -102.90), 'RAnkleRoll' : (0, 0, 45.19)}
+                             'RKneePitch' : (0, 0, -100.00), 'RAnklePitch' : (0, 0, -102.90), 'RAnkleRoll' : (0, 0, 0)}
 
     def think(self, perception):
         self.forward_kinematics(perception.joint)
@@ -84,9 +84,9 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         # nach foliensatz 3 Kinematics folie 35
         if (joint_name in ["LElbowRoll", "RElbowRoll", "LShoulderRoll", "LHipRoll", "RShoulderRoll", "RHipRoll", "LAnkleRoll", "RAnkleRoll"]):
             T = np.dot(T, np.array([[1,0,0,0], [0,c,-s,0], [0,s,c,0], [0,0,0,1]]))
-        if (joint_name in ["HeadPitch", "LshoulderPitch", "LHipYawPitch", "LKneePitch", "LAnklePitch", "LHipPitch", "RShoulderPitch", "RHipYawPitch", "RKneePitch", "RAnklePitch", "RHipPitch"]):
+        if (joint_name in ["HeadPitch", "LShoulderPitch", "LHipYawPitch", "LKneePitch", "LAnklePitch", "LHipPitch", "RShoulderPitch", "RHipYawPitch", "RKneePitch", "RAnklePitch", "RHipPitch"]):
             T = np.dot(T, np.array([[c,0,s,0], [0,1,0,0], [-s,0,c,0], [0,0,0,1]]))
-        if (joint_name in ["Headyaw", "LHipYawPitch", "LElbowYaw", "RHipYawPitch", "RElbowYaw"]):
+        if (joint_name in ["HeadYaw", "LHipYawPitch", "LElbowYaw", "RHipYawPitch", "RElbowYaw"]):
             T = np.dot(T, np.array([[c,-s,0,0], [s,c,0,0], [0,0,1,0], [0,0,0,1]]))
 
         #print(joint_name)
@@ -120,8 +120,11 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         #print(self.transforms['HeadYaw'][3][2])
         
         for i in self.transforms:
-            if (i == 'RElbowYaw'):
-                print(i," x,y,z,1 : ", np.array(self.transforms.get(i))[2][3])
+            if (i == 'LKneePitch' or i == 'RKneePitch'):
+                xc = np.array(self.transforms.get(i))[0][3]
+                yc = np.array(self.transforms.get(i))[1][3]
+                zc = np.array(self.transforms.get(i))[2][3]
+                print(i,'(', xc, ', ', yc, ', ', zc, ')')
                 
         
         #print(self.transforms)

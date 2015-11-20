@@ -13,6 +13,8 @@
 from forward_kinematics import ForwardKinematicsAgent
 from numpy.matlib import identity
 
+import numpy as np
+
 
 class InverseKinematicsAgent(ForwardKinematicsAgent):
     def inverse_kinematics(self, effector_name, transform):
@@ -22,7 +24,47 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         :param transform: 4x4 transform matrix
         :return: list of joint angles
         '''
+
+        jointss = {'HeadYaw': 0.0, 'RHipPitch': -0.0, 'RElbowYaw': -0.0, 'RShoulderPitch': 0.0, 'LShoulderPitch': 0.0, 'LKneePitch': -0.0, 'RAnkleRoll': 0.0, 'LShoulderRoll': 0.008726646259971648, 'LHipPitch': -0.0, 'LElbowYaw': 0.0, 'LAnklePitch': -0.0, 'RHipYawPitch': -0.0, 'HeadPitch': 0.0, 'LElbowRoll': -0.0066322511575784525, 'RShoulderRoll': -0.0066322511575784525, 'LAnkleRoll': -0.0, 'LHipYawPitch': -0.0, 'RAnklePitch': -0.0, 'LHipRoll': -0.0, 'RHipRoll': 0.0, 'RElbowRoll': 0.008726646259971648, 'RKneePitch': -0.0}
+
+
+        self.forward_kinematics(jointss)
+
+        joints = self.chains[effector_name]
+        #print(transform)
+        #Goal
+        xE = np.array(transform)[3][0]
+        yE = np.array(transform)[3][1]
+        zE = np.array(transform)[3][2]
+        #print (xE,yE,zE)
+        J = np.zeros((4,len(joints)))
+        #print(self.transforms)
+        for (i, joint) in enumerate(joints):
+            xc = np.array(self.transforms.get(joint))[3][0]
+            yc = np.array(self.transforms.get(joint))[3][1]
+            zc = np.array(self.transforms.get(joint))[3][2]
+            J[0, i] = xE - xc
+            J[1, i] = yE - yc
+            J[2, i] = zE - zc
+            J[3, i] = 1
+            #print(J, yE , yc)
+            #print(joint , xc, yc, zc)
+            
+        Jplus = np.dot(np.linalg.pinv(np.dot(J.T,J)),J.T)
+        #print (len(Jplus),len(Jplus[0]))
+        
+        d = np.ones((4,1))
+        #print(joints)
+        d[0] = xE - np.array(self.transforms.get(joints[-1]))[3][0]
+        d[1] = yE - np.array(self.transforms.get(joints[-1]))[3][1]
+        d[2] = zE - np.array(self.transforms.get(joints[-1]))[3][2]
+
+        djoints = np.dot(Jplus,d)
         joint_angles = []
+        #print(djoints)
+        for i in djoints:
+            joint_angles.append(i[0])
+        #print(joint_angles)
         # YOUR CODE HERE
         return joint_angles
 
@@ -30,7 +72,16 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         '''solve the inverse kinematics and control joints use the results
         '''
         # YOUR CODE HERE
-        self.keyframes = ([], [], [])  # the result joint angles have to fill in
+        v = self.inverse_kinematics(effector_name,transform)
+        transform = 
+        
+        
+        
+        #name, times, keys
+        name = []
+        times = []
+        keys = []
+        self.keyframes = (name, times, keys)  # the result joint angles have to fill in
 
 if __name__ == '__main__':
     agent = InverseKinematicsAgent()

@@ -51,17 +51,17 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
                        # , 'LWristYaw', 'LHand'
                        # , 'RWristYaw', 'RHand'
         # Laenge der Abstaende der einzelnen Gelenke in den chains
-        self.jointLengths = {'HeadYaw' : (0, 0, 0.1265), 'HeadPitch' : (0, 0, 0),
+        self.jointLengths = {'HeadYaw' : (0, 0, 126.50), 'HeadPitch' : (0, 0, 0),
                              # left arm and leg
-                            'LShoulderPitch' : (0, 0.098, 0.1), 'LShoulderRoll' : (0, 0, 0), 'LElbowYaw' : (0.105, 0.015, 0),
-                            'LElbowRoll' : (0, 0, 0), 'LWristYaw' : (0.05595, 0, 0), 'LHand' : (0.05775, 0, 0.01231),
-                            'LHipYawPitch' : (0, 0.05, -0.085), 'LHipRoll' : (0, 0, 0), 'LHipPitch' : (0, 0, 0), 
-                            'LKneePitch' : (0, 0, -0.1), 'LAnklePitch' : (0, 0, -0.1029), 'LAnkleRoll' : (0, 0, 0),
+                            'LShoulderPitch' : (0, 98.00, 100), 'LShoulderRoll' : (0, 0, 0), 'LElbowYaw' : (105, 15, 0),
+                            'LElbowRoll' : (0, 0, 0), 'LWristYaw' : (55.95, 0, 0), 'LHand' : (57.75, 0, 12.31),
+                            'LHipYawPitch' : (0, 50.00, -85.00), 'LHipRoll' : (0, 0, 0), 'LHipPitch' : (0, 0, 0), 
+                            'LKneePitch' : (0, 0, -100.00), 'LAnklePitch' : (0, 0, -102.90), 'LAnkleRoll' : (0, 0, 0),
                              # right arm and leg
-                            'RShoulderPitch' : (0, -0.098, 0.1), 'RShoulderRoll' : (0, 0, 0), 'RElbowYaw' : (0.105, -0.015, 0),
-                            'RElbowRoll' : (0, 0, 0), 'RWristYaw' : (0.05595, 0, 0), 'RHand' : (0.05775, 0, 0.01231),
-                            'RHipYawPitch' : (0, -0.05, -0.085), 'RHipRoll' : (0, 0, 0), 'RHipPitch' : (0, 0, 0), 
-                             'RKneePitch' : (0, 0, -0.1), 'RAnklePitch' : (0, 0, -0.1029), 'RAnkleRoll' : (0, 0, 0)}
+                            'RShoulderPitch' : (0, -98.00, 100), 'RShoulderRoll' : (0, 0, 0), 'RElbowYaw' : (105, -15, 0),
+                            'RElbowRoll' : (0, 0, 0), 'RWristYaw' : (55.95, 0, 0), 'RHand' : (57.75, 0, 12.31),
+                            'RHipYawPitch' : (0, -50.00, -85.00), 'RHipRoll' : (0, 0, 0), 'RHipPitch' : (0, 0, 0), 
+                             'RKneePitch' : (0, 0, -100.00), 'RAnklePitch' : (0, 0, -102.90), 'RAnkleRoll' : (0, 0, 0)}
 
     def think(self, perception):
         self.forward_kinematics(perception.joint)
@@ -93,9 +93,9 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         #print(T)
 
         # Verschiebung durch die Länge der einzelnen Gelenkabstände
-        T[3][0] = self.jointLengths[joint_name][0]
-        T[3][1] = self.jointLengths[joint_name][1]
-        T[3][2] = self.jointLengths[joint_name][2]
+        T[0][3] = self.jointLengths[joint_name][0]
+        T[1][3] = self.jointLengths[joint_name][1]
+        T[2][3] = self.jointLengths[joint_name][2]
 
         
         return T
@@ -116,23 +116,21 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
                 # YOUR CODE HERE
                 T = np.dot(T,Tl)
                 self.transforms[joint] = T
-
                 
         #print(self.transforms['HeadYaw'][3][2])
-        """
+        
         for i in self.transforms:
             if (i == 'LKneePitch' or i == 'RKneePitch'):
-                xc = np.array(self.transforms.get(i))[3][0]
-                yc = np.array(self.transforms.get(i))[3][1]
-                zc = np.array(self.transforms.get(i))[3][2]
-                print i, "(" , xc, ', ', yc, ', ', zc, ')'
-        #print(joints)       
-        print 
-        """
+                xc = np.array(self.transforms.get(i))[0][3]
+                yc = np.array(self.transforms.get(i))[1][3]
+                zc = np.array(self.transforms.get(i))[2][3]
+                print(i, "(" , xc, ', ', yc, ', ', zc, ')')
+                
+        
         #print(self.transforms)
         #print("| x: ", self.transforms[3][0]," y: ",self.transforms[3][1], " z: ", self.transforms[3][2])
 
 if __name__ == '__main__':
     agent = ForwardKinematicsAgent()
-    #agent.keyframes = hello()
+    agent.keyframes = hello()
     agent.run()

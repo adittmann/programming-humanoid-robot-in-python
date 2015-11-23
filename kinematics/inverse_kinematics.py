@@ -25,46 +25,71 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         :return: list of joint angles
         '''
 
-        jointss = {'HeadYaw': 0.0, 'RHipPitch': -0.0, 'RElbowYaw': -0.0, 'RShoulderPitch': 0.0, 'LShoulderPitch': 0.0, 'LKneePitch': -0.0, 'RAnkleRoll': 0.0, 'LShoulderRoll': 0.008726646259971648, 'LHipPitch': -0.0, 'LElbowYaw': 0.0, 'LAnklePitch': -0.0, 'RHipYawPitch': -0.0, 'HeadPitch': 0.0, 'LElbowRoll': -0.0066322511575784525, 'RShoulderRoll': -0.0066322511575784525, 'LAnkleRoll': -0.0, 'LHipYawPitch': -0.0, 'RAnklePitch': -0.0, 'LHipRoll': -0.0, 'RHipRoll': 0.0, 'RElbowRoll': 0.008726646259971648, 'RKneePitch': -0.0}
-
-
-        self.forward_kinematics(jointss)
-
+        '''jointss = {'HeadYaw': 0.0, 'RHipPitch': -0.0, 'RElbowYaw': -0.0, 'RShoulderPitch': 0.0, 'LShoulderPitch': 0.0, 'LKneePitch': -0.0, 'RAnkleRoll': 0.0, 'LShoulderRoll': 0.008726646259971648, 'LHipPitch': -0.0, 'LElbowYaw': 0.0, 'LAnklePitch': -0.0, 'RHipYawPitch': -0.0, 'HeadPitch': 0.0, 'LElbowRoll': -0.0066322511575784525, 'RShoulderRoll': -0.0066322511575784525, 'LAnkleRoll': -0.0, 'LHipYawPitch': -0.0, 'RAnklePitch': -0.0, 'LHipRoll': -0.0, 'RHipRoll': 0.0, 'RElbowRoll': 0.008726646259971648, 'RKneePitch': -0.0}'''
+        
+        jointss = (self.perception.joint).copy()
+        lambda_scale = 0.01
+        e = 0.03
+        djoints = np.zeros((6,1))
         joints = self.chains[effector_name]
-        #print(transform)
-        #Goal
+        last_joint = joints[-1]
+        print last_joint
         x_desired = np.array(transform)[3][0]
         y_desired = np.array(transform)[3][1]
         z_desired= np.array(transform)[3][2]
-        #print (xE,yE,zE)
-        J = np.zeros((4,len(joints)))
-        #print(self.transforms)
-        for (i, joint) in enumerate(joints):
-            xc = np.array(self.transforms.get(joint))[3][0]
-            yc = np.array(self.transforms.get(joint))[3][1]
-            zc = np.array(self.transforms.get(joint))[3][2]
-            J[0, i] = x_desired - xc
-            J[1, i] = y_desired - yc
-            J[2, i] = z_desired - zc
-            J[3, i] = 1
-            #print(J, yE , yc)
-            #print(joint , xc, yc, zc)
-            
-        Jplus = np.dot(np.linalg.pinv(np.dot(J.T,J)),J.T)
-        #print (len(Jplus),len(Jplus[0]))
-        
-        d = np.ones((4,1))
-        #print(joints)
-        d[0] = x_desired - np.array(self.transforms.get(joints[-1]))[3][0]
-        d[1] = y_desired - np.array(self.transforms.get(joints[-1]))[3][1]
-        d[2] = z_desired - np.array(self.transforms.get(joints[-1]))[3][2]
-
-        djoints = np.dot(Jplus,d)
         joint_angles = []
-        #print(djoints)
-        for i in djoints:
-            joint_angles.append(i[0])
-        #print(joint_angles)
+        for i in xrange(len(joints)):
+            joint_angles.append(0)
+        print joint_angles
+        
+        self.forward_kinematics(jointss)
+        x_cur = np.array(self.transforms.get(joints[-1]))[3][0]
+        y_cur = np.array(self.transforms.get(joints[-1]))[3][1]
+        z_cur = np.array(self.transforms.get(joints[-1]))[3][2]
+        
+        while(np.abs(x_desired - x_cur) > e  or np.abs(y_desired - y_cur) > e or np.abs(z_desired - z_cur) > e):
+            print (x_desired - x_cur, y_desired - y_cur, z_desired - z_cur)
+            #print(transform)
+            #Goal
+            #print (xE,yE,zE)
+            J = np.zeros((4,len(joints)))
+            #print(self.transforms)
+            for (i, joint) in enumerate(joints):
+                xc = np.array(self.transforms.get(joint))[3][0]
+                yc = np.array(self.transforms.get(joint))[3][1]
+                zc = np.array(self.transforms.get(joint))[3][2]
+                J[0, i] = x_desired - xc
+                J[1, i] = y_desired - yc
+                J[2, i] = z_desired - zc
+                J[3, i] = 1
+                #print(J, yE , yc)
+                #print(joint , xc, yc, zc)
+
+            Jplus = np.linalg.pinv(J)    
+            #Jplus = np.dot(np.linalg.pinv(np.dot(J.T,J)),J.T)
+            #print (len(Jplus),len(Jplus[0]))
+
+            d = np.ones((4,1))
+            #print(joints)
+            d[0] = x_desired - np.array(self.transforms.get(joints[-1]))[3][0]
+            d[1] = y_desired - np.array(self.transforms.get(joints[-1]))[3][1]
+            d[2] = z_desired - np.array(self.transforms.get(joints[-1]))[3][2]
+
+            djoints = lambda_scale * np.dot(Jplus,d)
+            #print djoints
+            for (i, j) in enumerate(joints):
+                jointss[j] += djoints[i, 0]
+                joint_angles[i] += djoints[i, 0]
+            
+            self.forward_kinematics(jointss)
+            
+            x_cur = np.array(self.transforms.get(joints[-1]))[3][0]
+            y_cur = np.array(self.transforms.get(joints[-1]))[3][1]
+            z_cur = np.array(self.transforms.get(joints[-1]))[3][2]
+        
+        
+        print(joint_angles)
+        print
         # YOUR CODE HERE
         return joint_angles
 
@@ -73,7 +98,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         '''
         # YOUR CODE HERE
         v = self.inverse_kinematics(effector_name,transform)
-        transform = 
+        #transform = 
         
         
         

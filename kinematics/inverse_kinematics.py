@@ -33,9 +33,9 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         joints = self.chains[effector_name]
         #print(transform)
         #Goal
-        xE = np.array(transform)[3][0]
-        yE = np.array(transform)[3][1]
-        zE = np.array(transform)[3][2]
+        x_desired = np.array(transform)[3][0]
+        y_desired = np.array(transform)[3][1]
+        z_desired= np.array(transform)[3][2]
         #print (xE,yE,zE)
         J = np.zeros((4,len(joints)))
         #print(self.transforms)
@@ -43,9 +43,9 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
             xc = np.array(self.transforms.get(joint))[3][0]
             yc = np.array(self.transforms.get(joint))[3][1]
             zc = np.array(self.transforms.get(joint))[3][2]
-            J[0, i] = xE - xc
-            J[1, i] = yE - yc
-            J[2, i] = zE - zc
+            J[0, i] = x_desired - xc
+            J[1, i] = y_desired - yc
+            J[2, i] = z_desired - zc
             J[3, i] = 1
             #print(J, yE , yc)
             #print(joint , xc, yc, zc)
@@ -55,9 +55,9 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         
         d = np.ones((4,1))
         #print(joints)
-        d[0] = xE - np.array(self.transforms.get(joints[-1]))[3][0]
-        d[1] = yE - np.array(self.transforms.get(joints[-1]))[3][1]
-        d[2] = zE - np.array(self.transforms.get(joints[-1]))[3][2]
+        d[0] = x_desired - np.array(self.transforms.get(joints[-1]))[3][0]
+        d[1] = y_desired - np.array(self.transforms.get(joints[-1]))[3][1]
+        d[2] = z_desired - np.array(self.transforms.get(joints[-1]))[3][2]
 
         djoints = np.dot(Jplus,d)
         joint_angles = []

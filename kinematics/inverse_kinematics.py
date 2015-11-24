@@ -29,39 +29,60 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         
         jointss = (self.perception.joint).copy()
         lambda_scale = 0.01
-        e = 0.03
+        e = 0.04
         djoints = np.zeros((6,1))
         joints = self.chains[effector_name]
         last_joint = joints[-1]
-        print last_joint
-        x_desired = np.array(transform)[3][0]
-        y_desired = np.array(transform)[3][1]
-        z_desired= np.array(transform)[3][2]
+        #print last_joint
+        x_desired = np.array(transform)[0][3]
+        y_desired = np.array(transform)[1][3]
+        z_desired= np.array(transform)[2][3]
+        thetax_d = 0
+        thetay_d = 0
+        thetaz_d = 0
         joint_angles = []
         for i in xrange(len(joints)):
             joint_angles.append(0)
-        print joint_angles
+        #print joint_angles
         
         self.forward_kinematics(jointss)
-        x_cur = np.array(self.transforms.get(joints[-1]))[3][0]
-        y_cur = np.array(self.transforms.get(joints[-1]))[3][1]
-        z_cur = np.array(self.transforms.get(joints[-1]))[3][2]
-        
+        x_cur = np.array(self.transforms.get(joints[-1]))[0][3]
+        y_cur = np.array(self.transforms.get(joints[-1]))[1][3]
+        z_cur = np.array(self.transforms.get(joints[-1]))[2][3]
+        #print(x_cur, y_cur, z_cur)        
         while(np.abs(x_desired - x_cur) > e  or np.abs(y_desired - y_cur) > e or np.abs(z_desired - z_cur) > e):
-            print (x_desired - x_cur, y_desired - y_cur, z_desired - z_cur)
+            #print (x_desired - x_cur, y_desired - y_cur, z_desired - z_cur)
             #print(transform)
             #Goal
             #print (xE,yE,zE)
-            J = np.zeros((4,len(joints)))
+            J = np.zeros((6,len(joints)))
             #print(self.transforms)
             for (i, joint) in enumerate(joints):
-                xc = np.array(self.transforms.get(joint))[3][0]
-                yc = np.array(self.transforms.get(joint))[3][1]
-                zc = np.array(self.transforms.get(joint))[3][2]
+                xc = np.array(self.transforms.get(joint))[0][3]
+                yc = np.array(self.transforms.get(joint))[1][3]
+                zc = np.array(self.transforms.get(joint))[2][3]
                 J[0, i] = x_desired - xc
                 J[1, i] = y_desired - yc
                 J[2, i] = z_desired - zc
-                J[3, i] = 1
+                if (joint in ["LElbowRoll", "RElbowRoll", "LShoulderRoll", "LHipRoll", "RShoulderRoll", "RHipRoll", "LAnkleRoll", "RAnkleRoll"]):
+                        J[3,i] = 1
+
+
+                if (joint in ["HeadPitch", "LShoulderPitch", "LHipYawPitch", "LKneePitch", "LAnklePitch", "LHipPitch", "RShoulderPitch", "RHipYawPitch", "RKneePitch", "RAnklePitch", "RHipPitch"]):
+                    if ("R" in joint):
+                        J[4,i] = -1
+                    else:
+                        J[4,i] = 1
+
+                if (joint in ["HeadYaw", "LHipYawPitch", "LElbowYaw", "RHipYawPitch", "RElbowYaw"]):
+                    if("Hip" in joint):
+                        J[5,i] = -1
+                    else:
+                        J[5,i] = 1
+            
+                #J[3, i] = 1 #x theta
+                #J[4, i] = 1 #y theta
+                #J[5, i] = 1 #z theta
                 #print(J, yE , yc)
                 #print(joint , xc, yc, zc)
 
@@ -69,11 +90,14 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
             #Jplus = np.dot(np.linalg.pinv(np.dot(J.T,J)),J.T)
             #print (len(Jplus),len(Jplus[0]))
 
-            d = np.ones((4,1))
+            d = np.ones((6,1))
             #print(joints)
-            d[0] = x_desired - np.array(self.transforms.get(joints[-1]))[3][0]
-            d[1] = y_desired - np.array(self.transforms.get(joints[-1]))[3][1]
-            d[2] = z_desired - np.array(self.transforms.get(joints[-1]))[3][2]
+            d[0] = x_desired - np.array(self.transforms.get(joints[-1]))[0][3]
+            d[1] = y_desired - np.array(self.transforms.get(joints[-1]))[1][3]
+            d[2] = z_desired - np.array(self.transforms.get(joints[-1]))[2][3]
+            d[3] = thetax_d - self.perception.joint.get(joints[-1])#x theta
+            d[4] = thetay_d - self.perception.joint.get(joints[-1])#y theta
+            d[5] = thetaz_d - self.perception.joint.get(joints[-1])#z theta
 
             djoints = lambda_scale * np.dot(Jplus,d)
             #print djoints
@@ -83,13 +107,13 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
             
             self.forward_kinematics(jointss)
             
-            x_cur = np.array(self.transforms.get(joints[-1]))[3][0]
-            y_cur = np.array(self.transforms.get(joints[-1]))[3][1]
-            z_cur = np.array(self.transforms.get(joints[-1]))[3][2]
+            x_cur = np.array(self.transforms.get(joints[-1]))[0][3]
+            y_cur = np.array(self.transforms.get(joints[-1]))[1][3]
+            z_cur = np.array(self.transforms.get(joints[-1]))[2][3]
         
         
-        print(joint_angles)
-        print
+        #print(joint_angles)
+        #print
         # YOUR CODE HERE
         return joint_angles
 
@@ -97,9 +121,24 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         '''solve the inverse kinematics and control joints use the results
         '''
         # YOUR CODE HERE
+        joints = self.chains[effector_name]
+        print("current coordinates")
+        x_cur = np.array(self.transforms.get(joints[-1]))[0][3]
+        y_cur = np.array(self.transforms.get(joints[-1]))[1][3]
+        z_cur = np.array(self.transforms.get(joints[-1]))[2][3]
+        print(x_cur,y_cur,z_cur)
+        
+        print("disired coordinates")
+        x_desired = np.array(transform)[0][3]
+        y_desired = np.array(transform)[1][3]
+        z_desired= np.array(transform)[2][3]
+        print(x_desired, y_desired, z_desired)
+        
+        print ("-------------------------------------------------------------")
         v = self.inverse_kinematics(effector_name,transform)
         #transform = 
-        
+        print("return angles")
+        print(v)
         
         
         #name, times, keys
@@ -112,7 +151,7 @@ if __name__ == '__main__':
     agent = InverseKinematicsAgent()
     # test inverse kinematics
     T = identity(4)
-    T[-1, 1] = 0.05
-    T[-1, 2] = 0.26
+    T[1, -1] = 0.05
+    T[2, -1] = -0.26
     agent.set_transforms('LLeg', T)
     agent.run()

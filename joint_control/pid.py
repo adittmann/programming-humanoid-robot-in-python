@@ -60,8 +60,8 @@ class PIDController(object):
         # simulation of plant (angle(t) = angle(t-1) + speed * dt)
         
         y = self.y.popleft()
-        e_alt = target - y
         e = target - sensor
+        e_alt = target - y
         #print sensor
         #print y
         #print
@@ -70,7 +70,7 @@ class PIDController(object):
         self.e1 = e.copy()
         #print "error: " + str(e)
         
-        speed = (self.u - y)/(2*self.dt)
+        speed = ((self.u - sensor) + (y - sensor)) / (2*self.dt)
         predicted = self.u + speed*self.dt
         self.y.append(predicted)
 

@@ -93,9 +93,9 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         #print(T)
 
         # Verschiebung durch die Länge der einzelnen Gelenkabstände
-        T[3][0] = self.jointLengths[joint_name][0]
-        T[3][1] = self.jointLengths[joint_name][1]
-        T[3][2] = self.jointLengths[joint_name][2]
+        T[0][3] = self.jointLengths[joint_name][0]
+        T[1][3] = self.jointLengths[joint_name][1]
+        T[2][3] = self.jointLengths[joint_name][2]
 
         
         return T
@@ -121,18 +121,18 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         #print(self.transforms['HeadYaw'][3][2])
         """
         for i in self.transforms:
-            if (i == 'LKneePitch' or i == 'RKneePitch'):
-                xc = np.array(self.transforms.get(i))[3][0]
-                yc = np.array(self.transforms.get(i))[3][1]
-                zc = np.array(self.transforms.get(i))[3][2]
+            if (i == 'RElbowRoll'):
+                xc = np.array(self.transforms.get(i))[0][3]
+                yc = np.array(self.transforms.get(i))[1][3]
+                zc = np.array(self.transforms.get(i))[2][3]
                 print i, "(" , xc, ', ', yc, ', ', zc, ')'
         #print(joints)       
-        print 
         """
+        
         #print(self.transforms)
         #print("| x: ", self.transforms[3][0]," y: ",self.transforms[3][1], " z: ", self.transforms[3][2])
 
 if __name__ == '__main__':
     agent = ForwardKinematicsAgent()
-    #agent.keyframes = hello()
+    agent.keyframes = hello()
     agent.run()

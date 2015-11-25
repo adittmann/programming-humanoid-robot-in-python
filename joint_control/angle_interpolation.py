@@ -43,6 +43,11 @@ class AngleInterpolationAgent(PIDAgent):
         target_joints = {}
         # YOUR CODE HERE
         
+        #print self.keyframes
+        if(self.keyframes == ([],[],[])):
+            print "return"
+            return target_joints
+        
         # adjust time value
         if(self.startTime == -1):
             self.startTime = perception.time
@@ -55,25 +60,30 @@ class AngleInterpolationAgent(PIDAgent):
         (names, times, keys) = keyframes
         
         # iterate over all joints in the keyframes
+        skippedJoints = 0
         for (i, name) in enumerate(names):
             
             timeLow = 0     # represents the lower threshold of the keyframe
             timeHigh = 0    # represents the upper threshold of the keyframe
             kfNum = 0       # the upper index of the keyframe which has to be used for interpolation
-            curTimes = times[i]    # just for easier reading/writing
-            lenCurTimes = len(curTimes)
+            jointTimes = times[i]    # just for easier reading/writing
+            lenJointTimes = len(jointTimes)
             
             # interpolation is finished for this joint, dont do any more steps
-            if (adjTime > curTimes[lenCurTimes - 1]):
-                #if(name in INVERSED_JOINTS):
-                #   target_joints[name] = -1*keys[i][lenCurTimes-1][0]
-                #else:
-                #    target_joints[name] = keys[i][lenCurTimes-1][0]
+            if (adjTime > jointTimes[-1]):
+                skippedJoints += 1
+                # if we skipped all joints interpolation is done -> reset timer and keyframes
+                if(skippedJoints == len(names)):
+                    self.startTime = -1
+                    self.keyframes = ([],[],[])
                 continue
             
+            
+            
+            
             # iterate over all times of the current joint to find the right time span
-            for j in xrange(lenCurTimes):
-                timeHigh = curTimes[j]
+            for j in xrange(lenJointTimes):
+                timeHigh = jointTimes[j]
                 
                 # we found the right interval -> break
                 if ((adjTime >= timeLow and adjTime <= timeHigh)): 
@@ -85,7 +95,7 @@ class AngleInterpolationAgent(PIDAgent):
             t = (adjTime - timeLow) / (timeHigh - timeLow)
             
             # set p-values
-            # if kfNum == 0, we are before the first time in curTimes -> no values for p0 and p1
+            # if kfNum == 0, we are before the first time in jointTimes -> no values for p0 and p1
             if (kfNum == 0):
                 p3 = keys[i][kfNum][0]
                 p2 = p3 + keys[i][kfNum][1][2]
@@ -109,7 +119,8 @@ class AngleInterpolationAgent(PIDAgent):
 
         #print "return"
         #print target_joints
-
+        #self.realStartTime = -1
+        #self.keyframes = ({},{},{})
         return target_joints
 
 if __name__ == '__main__':

@@ -18,15 +18,23 @@ class StandingUpAgent(PostureRecognitionAgent):
     def standing_up(self):
         posture = self.posture
         # YOUR CODE HERE
-        # postures: ['Left', 'HeadBack', 'Belly', 'Stand', 'Frog', 'StandInit', 'Back', 'Right', 'Knee', 'Sit', 'Crouch']
-        if(posture == 0):      # left
-            self.keyframes = kf.leftBackToStand()
-        elif(posture == 7):    # right
-            self.keyframes = kf.rightBackToStand()
-        elif(posture == 2):    # belly
-            self.keyframes = kf.leftBellyToStand()
-        elif(posture == 6 or posture == 9 or posture == 4):    # back, frog, sit
-            self.keyframes = kf.rightBackToStand()
+        
+        print self.startTime, self.stiffness
+        if(self.startTime == -1 and self.stiffness == 1):
+            # postures: ['Left', 'HeadBack', 'Belly', 'Stand', 'Frog', 'StandInit', 'Back', 'Right', 'Knee', 'Sit', 'Crouch']
+            if(posture == "Left"):
+                self.keyframes = kf.leftBackToStand()
+                print "### recognized :" + posture + ", executing leftBackToStand()"
+            elif(posture == "Right"):
+                self.keyframes = kf.rightBackToStand()
+                print "### recognized :" + posture + ", executing rightBackToStand()"
+            elif(posture == "Belly"):
+                self.keyframes = kf.rightBellyToStand()
+                print "### recognized :" + posture + ", executing leftBellyToStand()"
+            elif(posture == "Back" or posture == "Frog" or posture == "Sit"):
+                self.keyframes = kf.rightBackToStand()
+                print "### recognized :" + posture + ", executing rightBackToStand()"
+                
 
 class TestStandingUpAgent(StandingUpAgent):
     '''this agent turns off all motor to falls down in fixed cycles
@@ -40,14 +48,17 @@ class TestStandingUpAgent(StandingUpAgent):
         self.stiffness_on_off_time = 0
         self.stiffness_on_cycle = 10  # in seconds
         self.stiffness_off_cycle = 3  # in seconds
+        self.stiffness = 0
 
     def think(self, perception):
         action = super(TestStandingUpAgent, self).think(perception)
         time_now = perception.time
         if time_now - self.stiffness_on_off_time < self.stiffness_off_cycle:
             action.stiffness = {j: 0 for j in self.joint_names}  # turn off joints
+            self.stiffness = 0
         else:
             action.stiffness = {j: 1 for j in self.joint_names}  # turn on joints
+            self.stiffness = 1
         if time_now - self.stiffness_on_off_time > self.stiffness_on_cycle + self.stiffness_off_cycle:
             self.stiffness_on_off_time = time_now
 

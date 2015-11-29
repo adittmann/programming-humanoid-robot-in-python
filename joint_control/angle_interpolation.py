@@ -45,7 +45,7 @@ class AngleInterpolationAgent(PIDAgent):
         
         #print self.keyframes
         if(self.keyframes == ([],[],[])):
-            print "return"
+            #print "return"
             return target_joints
         
         # adjust time value

@@ -29,7 +29,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         
         jointss = (self.perception.joint).copy()
         lambda_scale = 0.01
-        e = 0.04
+        e = 0.01
         djoints = np.zeros((6,1))
         joints = self.chains[effector_name]
         last_joint = joints[-1]
@@ -51,7 +51,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         z_cur = np.array(self.transforms.get(joints[-1]))[2][3]
         #print(x_cur, y_cur, z_cur)        
         while(np.abs(x_desired - x_cur) > e  or np.abs(y_desired - y_cur) > e or np.abs(z_desired - z_cur) > e):
-            #print (x_desired - x_cur, y_desired - y_cur, z_desired - z_cur)
+            print (x_desired - x_cur, y_desired - y_cur, z_desired - z_cur)
             #print(transform)
             #Goal
             #print (xE,yE,zE)
@@ -61,9 +61,15 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
                 xc = np.array(self.transforms.get(joint))[0][3]
                 yc = np.array(self.transforms.get(joint))[1][3]
                 zc = np.array(self.transforms.get(joint))[2][3]
-                J[0, i] = x_desired - xc
-                J[1, i] = y_desired - yc
-                J[2, i] = z_desired - zc
+                #J[0, i] = x_desired - xc
+                #J[1, i] = y_desired - yc
+                #J[2, i] = z_desired - zc
+                J[0, i] = x_cur - xc
+                J[1, i] = y_cur - yc
+                J[2, i] = z_cur - zc
+
+
+
                 if (joint in ["LElbowRoll", "RElbowRoll", "LShoulderRoll", "LHipRoll", "RShoulderRoll", "RHipRoll", "LAnkleRoll", "RAnkleRoll"]):
                         J[3,i] = 1
 
@@ -115,6 +121,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         #print(joint_angles)
         #print
         # YOUR CODE HERE
+        print("inverse done")
         return joint_angles
 
     def set_transforms(self, effector_name, transform):
@@ -138,8 +145,9 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         v = self.inverse_kinematics(effector_name,transform)
         #transform = 
         print("return angles")
-        print(v)
         
+        v = np.mod(v,np.pi)
+        print(np.degrees(v)," in degrees")
         
         #name, times, keys
         name = []

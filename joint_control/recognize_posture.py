@@ -52,8 +52,9 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
         
         angles = np.array(angles).reshape(1, -1)
         
-        posture = self.classes[self.posture_classifier.predict(angles)[0]]
-        print posture
+        i = self.posture_classifier.predict(angles)[0]
+        posture = self.classes[i]
+        print posture, i
 
         return posture
 

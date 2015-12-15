@@ -107,13 +107,15 @@ class AngleInterpolationAgent(PIDAgent):
                 p1 = p0 + keys[i][kfNum-1][2][2]
                 p2 = p3 + keys[i][kfNum][1][2]
                 
-                
+            
             # calculate joint angle and append to dictionary
             angle = ((1-t)**3)*p0 + 3*t*((1-t)**2)*p1 + 3*(t**2)*(1-t)*p2 + (t**3)*p3
             #if(name in INVERSED_JOINTS):
             #    target_joints[name] = -1*angle
             #else:
             target_joints[name] = angle
+            if(name == "LHipYawPitch"):
+                target_joints["RHipYawPitch"] = angle
             #print degrees(angle)
             
 
